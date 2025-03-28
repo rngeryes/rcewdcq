@@ -172,103 +172,98 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Wait for Telegram to initialize
+            // Проверяем, запущено ли в Telegram WebApp
             if (window.Telegram && Telegram.WebApp) {
-                initApp();
-            } else {
-                // For testing outside Telegram
-                setTimeout(initApp, 500);
-            }
-        });
+                const tgWebApp = Telegram.WebApp;
+                tgWebApp.expand(); // Раскрываем на весь экран
+                tgWebApp.enableClosingConfirmation(); // Подтверждение закрытия
 
-        function initApp() {
-            const tgWebApp = window.Telegram?.WebApp;
-            
-            // Get user data from Telegram or use mock data for testing
-            const user = tgWebApp ? {
-                id: tgWebApp.initDataUnsafe.user?.id || 123456789,
-                firstName: tgWebApp.initDataUnsafe.user?.first_name || 'John',
-                lastName: tgWebApp.initDataUnsafe.user?.last_name || 'Doe',
-                username: tgWebApp.initDataUnsafe.user?.username || 'johndoe',
-                languageCode: tgWebApp.initDataUnsafe.user?.language_code || 'en',
-                isPremium: tgWebApp.initDataUnsafe.user?.is_premium || false
-            } : {
-                id: 123456789,
-                firstName: 'John',
-                lastName: 'Doe',
-                username: 'johndoe',
-                languageCode: 'en',
-                isPremium: false
-            };
-
-            // Generate mock stats
-            const messagesThisYear = Math.floor(Math.random() * 500) + 50;
-            const avgMessagesPerDay = Math.floor(messagesThisYear / 365 * 10) / 10;
-            const daysActive = Math.floor(Math.random() * 200) + 100;
-            const stickersSent = Math.floor(Math.random() * 300);
-            
-            // Create app HTML
-            const app = document.getElementById('app');
-            app.innerHTML = `
-                <div class="container">
-                    <header>
-                        <h1>Telegram Stats</h1>
-                        <p class="subtitle">Your messaging activity overview</p>
-                    </header>
-                    
-                    <div class="user-card">
-                        <div class="avatar">${user.firstName.charAt(0)}${user.lastName ? user.lastName.charAt(0) : ''}</div>
-                        <div class="user-info">
-                            <div class="username">${user.firstName} ${user.lastName || ''}</div>
-                            <div class="user-id">@${user.username}</div>
-                            <div class="user-id">ID: ${user.id}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="stats-container">
-                        <div class="stat-card">
-                            <div class="stat-value">${messagesThisYear}</div>
-                            <div class="stat-label">Messages this year</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${avgMessagesPerDay}</div>
-                            <div class="stat-label">Avg per day</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${daysActive}</div>
-                            <div class="stat-label">Active days</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">${stickersSent}</div>
-                            <div class="stat-label">Stickers sent</div>
-                        </div>
-                    </div>
-                    
-                    <div class="activity-chart">
-                        <div class="chart-title">Monthly Activity</div>
-                        <div class="chart-placeholder">Activity chart would be displayed here</div>
-                    </div>
-                    
-                    <div class="footer">
-                        Last updated: ${new Date().toLocaleDateString()}
-                    </div>
-                </div>
-            `;
-
-            // Expand the app to fill the screen if running in Telegram
-            if (tgWebApp) {
-                tgWebApp.expand();
-                tgWebApp.enableClosingConfirmation();
+                // Получаем данные пользователя
+                const user = tgWebApp.initDataUnsafe.user;
                 
-                // Change theme according to Telegram
+                if (!user) {
+                    document.getElementById('app').innerHTML = `
+                        <div class="container">
+                            <h1>Ошибка</h1>
+                            <p>Не удалось получить данные пользователя.</p>
+                            <p>Откройте мини-приложение через Telegram.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Генерируем случайные данные для статистики (в реальном приложении нужно брать с сервера)
+                const messagesThisYear = Math.floor(Math.random() * 500) + 50;
+                const avgMessagesPerDay = (messagesThisYear / 365).toFixed(1);
+                const daysActive = Math.floor(Math.random() * 200) + 100;
+                const stickersSent = Math.floor(Math.random() * 300);
+
+                // Формируем HTML
+                const appHTML = `
+                    <div class="container">
+                        <header>
+                            <h1>Telegram Stats</h1>
+                            <p class="subtitle">Ваша статистика сообщений</p>
+                        </header>
+                        
+                        <div class="user-card">
+                            <div class="avatar">${user.first_name?.charAt(0) || ''}${user.last_name?.charAt(0) || ''}</div>
+                            <div class="user-info">
+                                <div class="username">${user.first_name || ''} ${user.last_name || ''}</div>
+                                <div class="user-id">@${user.username || 'нет username'}</div>
+                                <div class="user-id">ID: ${user.id}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="stats-container">
+                            <div class="stat-card">
+                                <div class="stat-value">${messagesThisYear}</div>
+                                <div class="stat-label">Сообщений за год</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${avgMessagesPerDay}</div>
+                                <div class="stat-label">Среднее в день</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${daysActive}</div>
+                                <div class="stat-label">Активных дней</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">${stickersSent}</div>
+                                <div class="stat-label">Стикеров отправлено</div>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-chart">
+                            <div class="chart-title">Активность по месяцам</div>
+                            <div class="chart-placeholder">Здесь будет график активности</div>
+                        </div>
+                        
+                        <div class="footer">
+                            Обновлено: ${new Date().toLocaleDateString()}
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('app').innerHTML = appHTML;
+
+                // Подстраиваем тему под Telegram
                 if (tgWebApp.colorScheme === 'dark') {
                     document.documentElement.style.setProperty('--tg-theme-bg-color', '#0f0f0f');
                     document.documentElement.style.setProperty('--tg-theme-text-color', '#ffffff');
                     document.documentElement.style.setProperty('--tg-theme-hint-color', '#aaaaaa');
                     document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', '#1e1e1e');
                 }
+            } else {
+                // Если открыто не в Telegram, показываем ошибку
+                document.getElementById('app').innerHTML = `
+                    <div class="container">
+                        <h1>Это мини-приложение Telegram</h1>
+                        <p>Откройте его через Telegram-бота для просмотра статистики.</p>
+                    </div>
+                `;
             }
-        }
+        });
     </script>
 </body>
 </html>
