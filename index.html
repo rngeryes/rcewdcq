@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram User Stats</title>
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #000000;
+            --tg-theme-hint-color: #707579;
+            --tg-theme-link-color: #3390ec;
+            --tg-theme-button-color: #3390ec;
+            --tg-theme-button-text-color: #ffffff;
+            --tg-theme-secondary-bg-color: #f4f4f5;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            margin-top: 0;
+        }
+
+        .user-card {
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--tg-theme-button-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex-grow: 1;
+        }
+
+        .username {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .user-id {
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--tg-theme-button-color);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        .activity-chart {
+            background-color: var(--tg-theme-secondary-bg-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .chart-placeholder {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--tg-theme-hint-color);
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: var(--tg-theme-hint-color);
+            padding: 20px 0;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 16px;
+            color: var(--tg-theme-hint-color);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --tg-theme-bg-color: #0f0f0f;
+                --tg-theme-text-color: #ffffff;
+                --tg-theme-hint-color: #aaaaaa;
+                --tg-theme-secondary-bg-color: #1e1e1e;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">Loading user data...</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wait for Telegram to initialize
+            if (window.Telegram && Telegram.WebApp) {
+                initApp();
+            } else {
+                // For testing outside Telegram
+                setTimeout(initApp, 500);
+            }
+        });
+
+        function initApp() {
+            const tgWebApp = window.Telegram?.WebApp;
+            
+            // Get user data from Telegram or use mock data for testing
+            const user = tgWebApp ? {
+                id: tgWebApp.initDataUnsafe.user?.id || 123456789,
+                firstName: tgWebApp.initDataUnsafe.user?.first_name || 'John',
+                lastName: tgWebApp.initDataUnsafe.user?.last_name || 'Doe',
+                username: tgWebApp.initDataUnsafe.user?.username || 'johndoe',
+                languageCode: tgWebApp.initDataUnsafe.user?.language_code || 'en',
+                isPremium: tgWebApp.initDataUnsafe.user?.is_premium || false
+            } : {
+                id: 123456789,
+                firstName: 'John',
+                lastName: 'Doe',
+                username: 'johndoe',
+                languageCode: 'en',
+                isPremium: false
+            };
+
+            // Generate mock stats
+            const messagesThisYear = Math.floor(Math.random() * 500) + 50;
+            const avgMessagesPerDay = Math.floor(messagesThisYear / 365 * 10) / 10;
+            const daysActive = Math.floor(Math.random() * 200) + 100;
+            const stickersSent = Math.floor(Math.random() * 300);
+            
+            // Create app HTML
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="container">
+                    <header>
+                        <h1>Telegram Stats</h1>
+                        <p class="subtitle">Your messaging activity overview</p>
+                    </header>
+                    
+                    <div class="user-card">
+                        <div class="avatar">${user.firstName.charAt(0)}${user.lastName ? user.lastName.charAt(0) : ''}</div>
+                        <div class="user-info">
+                            <div class="username">${user.firstName} ${user.lastName || ''}</div>
+                            <div class="user-id">@${user.username}</div>
+                            <div class="user-id">ID: ${user.id}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <div class="stat-value">${messagesThisYear}</div>
+                            <div class="stat-label">Messages this year</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${avgMessagesPerDay}</div>
+                            <div class="stat-label">Avg per day</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${daysActive}</div>
+                            <div class="stat-label">Active days</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${stickersSent}</div>
+                            <div class="stat-label">Stickers sent</div>
+                        </div>
+                    </div>
+                    
+                    <div class="activity-chart">
+                        <div class="chart-title">Monthly Activity</div>
+                        <div class="chart-placeholder">Activity chart would be displayed here</div>
+                    </div>
+                    
+                    <div class="footer">
+                        Last updated: ${new Date().toLocaleDateString()}
+                    </div>
+                </div>
+            `;
+
+            // Expand the app to fill the screen if running in Telegram
+            if (tgWebApp) {
+                tgWebApp.expand();
+                tgWebApp.enableClosingConfirmation();
+                
+                // Change theme according to Telegram
+                if (tgWebApp.colorScheme === 'dark') {
+                    document.documentElement.style.setProperty('--tg-theme-bg-color', '#0f0f0f');
+                    document.documentElement.style.setProperty('--tg-theme-text-color', '#ffffff');
+                    document.documentElement.style.setProperty('--tg-theme-hint-color', '#aaaaaa');
+                    document.documentElement.style.setProperty('--tg-theme-secondary-bg-color', '#1e1e1e');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
