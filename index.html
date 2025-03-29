@@ -33,8 +33,26 @@
             font-weight: bold;
             margin-bottom: 10px;
         }
+        .user-info {
+            margin-top: 15px;
+            text-align: left;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        .info-item {
+            margin-bottom: 8px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
         .loading {
             color: #666;
+        }
+        .not-available {
+            color: #999;
+            font-style: italic;
         }
     </style>
 </head>
@@ -43,44 +61,75 @@
         <h1>Мой профиль</h1>
         <img id="avatar" class="avatar" src="https://via.placeholder.com/100" alt="Аватар">
         <div id="username" class="username loading">Загрузка...</div>
+        
+        <div class="user-info">
+            <div class="info-item">
+                <span class="info-label">Имя:</span> <span id="first-name">—</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Фамилия:</span> <span id="last-name">—</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Дата регистрации:</span> 
+                <span id="reg-date" class="not-available">недоступно</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Сообщений:</span> 
+                <span id="messages-count" class="not-available">недоступно</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">ID:</span> <span id="user-id">—</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Язык:</span> <span id="language">—</span>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Ждём полной загрузки Telegram WebApp
         document.addEventListener('DOMContentLoaded', function() {
-            // Проверяем, что мы внутри Telegram WebApp
             if (window.Telegram && Telegram.WebApp) {
                 const tg = Telegram.WebApp;
-                
-                // Разворачиваем приложение на весь экран
                 tg.expand();
                 
-                // Получаем данные пользователя
                 const user = tg.initDataUnsafe.user;
-                
                 if (user) {
-                    // Устанавливаем аватар
-                    const avatar = document.getElementById('avatar');
-                    if (user.photo_url) {
-                        avatar.src = user.photo_url;
-                    }
+                    // Основная информация
+                    document.getElementById('avatar').src = user.photo_url || 'https://via.placeholder.com/100';
+                    document.getElementById('username').textContent = user.username ? `@${user.username}` : 'Без username';
+                    document.getElementById('username').classList.remove('loading');
                     
-                    // Устанавливаем имя пользователя
-                    const usernameElement = document.getElementById('username');
-                    usernameElement.textContent = user.username ? `@${user.username}` : 'Без username';
-                    usernameElement.classList.remove('loading');
+                    // Дополнительная информация
+                    document.getElementById('first-name').textContent = user.first_name || '—';
+                    document.getElementById('last-name').textContent = user.last_name || '—';
+                    document.getElementById('user-id').textContent = user.id || '—';
+                    document.getElementById('language').textContent = tg.initDataUnsafe.user?.language_code || '—';
                     
-                    // Если есть имя и фамилия, можно вывести их
-                    if (user.first_name || user.last_name) {
-                        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-                        if (fullName) {
-                            const nameElement = document.createElement('div');
-                            nameElement.textContent = fullName;
-                            usernameElement.parentNode.insertBefore(nameElement, usernameElement.nextSibling);
-                        }
-                    }
-                } else {
-                    document.getElementById('username').textContent = 'Данные не получены';
+                    // Эмуляция "даты регистрации" (на самом деле это дата первого использования вашего бота)
+                    const joinDate = new Date(tg.initDataUnsafe.start_param ? parseInt(tg.initDataUnsafe.start_param) * 1000 : Date.now());
+                    document.getElementById('reg-date').textContent = joinDate.toLocaleDateString();
+                    document.getElementById('reg-date').classList.remove('not-available');
+                    
+                    // Эмуляция "количества сообщений" (можно хранить в localStorage)
+                    let messageCount = localStorage.getItem('tg_message_count') || 0;
+                    document.getElementById('messages-count').textContent = messageCount;
+                    document.getElementById('messages-count').classList.remove('not-available');
+                    
+                    // Кнопка для увеличения счётчика (демонстрация)
+                    const btn = document.createElement('button');
+                    btn.textContent = '+1 сообщение';
+                    btn.style.marginTop = '10px';
+                    btn.style.padding = '5px 10px';
+                    btn.style.background = '#0088cc';
+                    btn.style.color = 'white';
+                    btn.style.border = 'none';
+                    btn.style.borderRadius = '5px';
+                    btn.addEventListener('click', function() {
+                        messageCount++;
+                        localStorage.setItem('tg_message_count', messageCount);
+                        document.getElementById('messages-count').textContent = messageCount;
+                    });
+                    document.querySelector('.user-info').appendChild(btn);
                 }
             } else {
                 document.getElementById('username').textContent = 'Откройте в Telegram';
